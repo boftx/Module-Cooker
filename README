@@ -1,0 +1,57 @@
+Module::Cooker
+
+Like most of you reading this, I have used various tools such as h2xs,
+Module::Starter, Module::Maker (and have examined Distribution::Cooker)
+to create skeleton distributions.
+
+And like most of you (I presume) I have found each to be lacking in some area.
+
+Hence, Module::Cooker. It draws upon what I consider to be the best of the
+aforementioned tools and adds a bit of my own. Specifically, I have strived
+to make it as easy as possible to create custom skeleton templates that
+meet the needs of different types of modules.
+
+This module would have been much more difficult to design without the work
+that has been done by many others on the aforementioned modules.
+
+INSTALLATION
+
+To install this module, run the following commands:
+
+	perl Makefile.PL
+	make
+	make test
+	make install
+
+SUPPORT AND DOCUMENTATION
+
+After installing, you can find documentation for this module with the
+perldoc command.
+
+    perldoc Module::Cooker
+
+You can also look for information at:
+
+    RT, CPAN's request tracker (report bugs here)
+        http://rt.cpan.org/NoAuth/Bugs.html?Dist=Module-Cooker
+
+    AnnoCPAN, Annotated CPAN documentation
+        http://annocpan.org/dist/Module-Cooker
+
+    CPAN Ratings
+        http://cpanratings.perl.org/d/Module-Cooker
+
+    Search CPAN
+        http://search.cpan.org/dist/Module-Cooker/
+
+
+LICENSE AND COPYRIGHT
+
+Copyright (C) 2013 Jim Bacon
+
+This program is free software; you can redistribute it and/or modify it
+under the terms of either: the GNU General Public License as published
+by the Free Software Foundation; or the Artistic License.
+
+See L<http://dev.perl.org/licenses/> for more information.
+
