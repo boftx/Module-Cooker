@@ -1,0 +1,86 @@
+#!/usr/local/bin/perl
+
+use strict;
+use warnings FATAL => 'all';
+
+use lib qw( ../lib );
+
+use Try::Tiny;
+use Data::Dumper;
+
+use Getopt::Long;
+use AppConfig;
+
+use File::Spec::Functions ( qw( catdir catfile ) );
+use File::HomeDir ();
+
+use Module::Cooker;
+
+my $VERSION = '0.1_1';
+
+my $mc_dir = try {
+    return unless my $dir = File::HomeDir->my_home;
+    my $path = catfile( $dir,'modcook' );
+    -d $path ? return $path : return;
+} catch {
+    warn "Can not get user's home directory: $_\n";
+    return;
+};
+
+#my $extravars = {};
+
+my %mc_params = (
+    minperl => undef,
+    package => undef,
+    version => undef,
+    author  => undef,
+    email   => undef,
+    profile => undef,
+    nosubs  => undef,
+    localdirs => undef,
+);
+
+my $opts = {};
+GetOptions(
+    $opts,          'minperl=s', 'package=s', 'version=s',
+    'author=s',     'email=s',   'profile=s', 'nosubs',
+    'extravars=s%', 'localdirs=s@',
+) or die;
+
+print "Before:\n";
+print 'Options - ' . Dumper($opts);
+print 'MC params - ' . Dumper( \%mc_params );
+
+for ( keys(%mc_params) ) {
+    ( delete( $mc_params{$_} ), next )
+      unless defined( $opts->{$_} );
+    $mc_params{$_} = delete( $opts->{$_} );
+}
+
+print "\nAfter:\n";
+print 'Options - ' . Dumper($opts);
+print 'MC params - ' . Dumper( \%mc_params );
+
+if ( $mc_dir && !$opts->{nousercfg} ) {
+}
+
+my $mc = Module::Cooker->new(%mc_params);
+
+print "\nObject values:\n";
+print Dumper( \%{$mc->summary} );
+#exit;
+
+$mc->cook();
+
+exit;
+
+__END__
+
+=head1 NAME
+
+modcooker - Create skeleton module packages from templates
+
+=head1 SYNOPSIS
+
+=cut
+

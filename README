@@ -23,27 +23,7 @@ To install this module, run the following commands:
 	make test
 	make install
 
-SUPPORT AND DOCUMENTATION
-
-After installing, you can find documentation for this module with the
-perldoc command.
-
-    perldoc Module::Cooker
-
-You can also look for information at:
-
-    RT, CPAN's request tracker (report bugs here)
-        http://rt.cpan.org/NoAuth/Bugs.html?Dist=Module-Cooker
-
-    AnnoCPAN, Annotated CPAN documentation
-        http://annocpan.org/dist/Module-Cooker
-
-    CPAN Ratings
-        http://cpanratings.perl.org/d/Module-Cooker
-
-    Search CPAN
-        http://search.cpan.org/dist/Module-Cooker/
-
+If you are on a windows box you should use 'nmake' rather than 'make'.
 
 LICENSE AND COPYRIGHT
 
