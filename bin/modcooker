@@ -108,7 +108,7 @@ if ( $cfgopts{setup} ) {
         die "Can't make dir $mc_dir: $_";
     } unless $mc_dir;
 
-    my $std_cfg = catfile(Module::Cooker->_basename_dir,'modcooker.cfg');
+    my $std_cfg = catfile(Module::Cooker->basename_dir,'modcooker.cfg');
     copy($std_cfg,$cfg_fname) or die "Can't create $cfg_fname: $!";
 
     print "$cfg_fname created\n";
