@@ -397,6 +397,8 @@ sub basename_dir {
 sub summary {
     my $self = shift;
 
+    croak "Can't set read-only method: summary" if @_;
+
     my $summary = {};
     for ( keys( %{$self} ) ) {
         next if /^_/;
@@ -414,6 +416,8 @@ sub summary {
 sub dist_name {
     my $self = shift;
 
+    croak "Can't set read-only method: dist_name" if @_;
+
     my $dname = $self->{package};
     $dname =~ s/::/-/g;
 
@@ -424,6 +428,8 @@ sub dist_name {
 sub module_name {
     my $self = shift;
 
+    croak "Can't set read-only method: module_name" if @_;
+
     my @parts = split( /::/, $self->{package} );
 
     return join( '.', pop(@parts), 'pm' );
@@ -431,6 +437,8 @@ sub module_name {
 
 sub template_data {
     my $self = shift;
+
+    croak "Can't set read-only method: template_data" if @_;
 
     my $tdata = {
         author    => $self->_author_info,
