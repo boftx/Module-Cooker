@@ -9,18 +9,21 @@ use Try::Tiny;
 use Data::Dumper;
 
 use Getopt::Long;
-use AppConfig ( qw( :expand :argcount ) );;
+use AppConfig (qw( :expand :argcount ));
 
 use File::Spec::Functions (qw( catdir catfile ));
 use File::HomeDir ();
+use File::Path qw( make_path );
+use File::Copy;
 
 use Module::Cooker;
 
 my $VERSION = '0.1_1';
 
+my $homedir;
 my $mc_dir = try {
-    return unless my $dir = File::HomeDir->my_home;
-    my $path = catfile( $dir, 'modcook' );
+    return unless $homedir = File::HomeDir->my_home;
+    my $path = catfile( $homedir, 'modcook' );
     -d $path ? return $path : return;
 }
 catch {
@@ -30,7 +33,7 @@ catch {
 
 #my $extravars = {};
 
-# anything not in this list is meant to be a modcooker param as opposed
+# anything not in this hash is meant to be a modcooker param as opposed
 # to being a param passed to the M::C constructor.
 my %mc_params = (
     minperl   => undef,
@@ -41,9 +44,11 @@ my %mc_params = (
     profile   => undef,
     nosubs    => undef,
     localdirs => undef,
+    extravars => undef,
 );
 
 my $cfg = AppConfig->new(
+    { ERROR => \&_cfg_error },
     qw(
       minperl=s
       package=s
@@ -54,26 +59,72 @@ my $cfg = AppConfig->new(
       nosubs
       extravars=s% )
 );
+
+# this has to be defined here because of the EXPAND arg to it
 $cfg->define( 'localdirs=s@' => { EXPAND => EXPAND_UID } );
 
 # read a local config file if it exists
-$cfg->file(catfile($mc_dir,'modcook.cfg')) if $mc_dir;
-my @initial_dirs = @{$cfg->localdirs};
+if ( $mc_dir ) {
+    my $cfg_fname = catfile( $mc_dir, 'modcooker.cfg' );
+    try {
+        $cfg->file( $cfg_fname );
+    } catch {
+        warn "Config file fatal error\n";
+        die $_;
+    } if -f $cfg_fname;
+}
 
-# and add in anything from the command line
-$cfg->getopt();
+# get this now before checking the command line
+my @initial_dirs = @{ $cfg->localdirs };
+
+# it makes no sense to have this defined other than as a command line option
+$cfg->define( 'setup' => { ARGCOUNT => ARGCOUNT_NONE } );
+
+# add in anything from the command line
+# NOTE: hashref args (i.e. extravars) do NOT work due to a bug in AppConfig
+try {
+    $cfg->getopt();
+} catch {
+    warn "Command line fatal error\n";
+    die $_;
+};
 
 my %cfgopts = $cfg->varlist("^.+");
 
+# if 'setup' is true then all we want to do is copy the sample config file
+# to '~/modcook' and then exit. Should we also copy the default profile to
+# '~/modcook/custom' as a starting point?
+if ( $cfgopts{setup} ) {
+    die "Must have a user's homedir to do a setup" unless $homedir;
+
+    my $cfg_fname = catfile( $homedir, 'modcook', 'modcooker.cfg' );
+    die "$cfg_fname already exists" if -f $cfg_fname;
+
+    # we need to create '~/modcook' if it doesn't exist
+    try {
+        $mc_dir = catdir($homedir, 'modcook');
+        make_path( $mc_dir ) or die $!;
+    } catch {
+        die "Can't make dir $mc_dir: $_";
+    } unless $mc_dir;
+
+    my $std_cfg = catfile(Module::Cooker->_basename_dir,'modcooker.cfg');
+    copy($std_cfg,$cfg_fname) or die "Can't create $cfg_fname: $!";
+
+    print "$cfg_fname created\n";
+
+    exit;
+}
+
 # this addresses a major drawback with other config files
-if ( grep( /^replace$/, @{$cfgopts{localdirs}} ) ) {
-    shift(@{$cfgopts{localdirs}}) for ( 1 .. @initial_dirs );
-    my @tmp = grep !/^replace$/, @{$cfgopts{localdirs}};
+if ( grep( /^replace$/, @{ $cfgopts{localdirs} } ) ) {
+    shift( @{ $cfgopts{localdirs} } ) for ( 1 .. @initial_dirs );
+    my @tmp = grep !/^replace$/, @{ $cfgopts{localdirs} };
     $cfgopts{localdirs} = \@tmp;
 }
 
 print "Before:\n";
-print 'Options - ' . Dumper(\%cfgopts);
+print 'Options - ' . Dumper( \%cfgopts );
 print 'MC params - ' . Dumper( \%mc_params );
 
 for ( keys(%mc_params) ) {
@@ -83,7 +134,7 @@ for ( keys(%mc_params) ) {
 }
 
 print "\nAfter:\n";
-print 'Options - ' . Dumper(\%cfgopts);
+print 'Options - ' . Dumper( \%cfgopts );
 print 'MC params - ' . Dumper( \%mc_params );
 
 my $mc = Module::Cooker->new(%mc_params);
@@ -96,6 +147,15 @@ $mc->cook();
 
 exit;
 
+sub _cfg_error {
+    if ( @_ > 1 ) {
+        my $pattern = shift;
+        die sprintf("$pattern\n",@_);
+    } else {
+        die "$_[0]\n";
+    }
+}
+
 __END__
 
 =head1 NAME
@@ -103,6 +163,13 @@ __END__
 modcooker - Create skeleton module packages from templates
 
 =head1 SYNOPSIS
+
+=head1 KNOWN BUGS
+
+Due to L<this bug|https://rt.cpan.org/Public/Bug/Display.html?id=32954> in
+L<AppConfig> it is not possible to update values for C<extravars> from the
+command line. It has no effect upon setting them in a local config file,
+however.
 
 =cut
 
