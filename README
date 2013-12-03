@@ -25,6 +25,12 @@ To install this module, run the following commands:
 
 If you are on a windows box you should use 'nmake' rather than 'make'.
 
+KNOWN BUGS
+
+A bug in AppConfig (https://rt.cpan.org/Public/Bug/Display.html?id=32954)
+prevents setting values for 'extravars' from the command line of modcooker.
+That said, they can be set the the config file without a problem.
+
 LICENSE AND COPYRIGHT
 
 Copyright (C) 2013 Jim Bacon
