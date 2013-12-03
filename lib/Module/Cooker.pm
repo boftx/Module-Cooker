@@ -16,6 +16,7 @@ use Try::Tiny;
 use version 0.77;
 
 use ExtUtils::Manifest qw( mkmanifest );
+use Storable (qw( dclone ));
 
 use File::Path qw( make_path );
 use File::Spec::Functions qw( catdir catfile );
@@ -228,7 +229,6 @@ sub _include_path {
     my $self = shift;
 
     return $self->{_include_path} if $self->{_include_path};
-
 }
 
 sub _process_template {
@@ -353,9 +353,10 @@ sub extravars {
 
     croak "Can't set read-only attribute: extravars" if @_;
 
-    my %extravars = %{ $self->{extravars} };
+    my $tmp       = $self->{extravars};
+    my $extravars = dclone($tmp);
 
-    return wantarray ? %extravars : \%extravars;
+    return wantarray ? %{$extravars} : $extravars;
 }
 
 # override the default accessor generation to ensure a copy is made
@@ -372,6 +373,8 @@ sub localdirs {
 # return a list of dirs that actually contain the requested profile
 sub profile_dirs {
     my $self = shift;
+
+    croak "Can't set read-only method: profile_dirs" if @_;
 
     my @searchdirs = $self->localdirs;
     push( @searchdirs, $self->basename_dir );
@@ -399,14 +402,13 @@ sub summary {
 
     croak "Can't set read-only method: summary" if @_;
 
-    my $summary = {};
+    my $tmp = {};
     for ( keys( %{$self} ) ) {
-        next if /^_/;
-
-        # TODO: be sure any references point to copies and not the actual
-        # attribute refs to deter tampering.
-        $summary->{$_} = $self->{$_};
+        next if /^_/;    # we only want the attributes, not internals
+        $tmp->{$_} = $self->{$_};
     }
+
+    my $summary = dclone($tmp);
 
     # sorry, Will, but i think this is handy. :)
     return wantarray ? %{$summary} : $summary;
@@ -440,7 +442,7 @@ sub template_data {
 
     croak "Can't set read-only method: template_data" if @_;
 
-    my $tdata = {
+    my $tmp = {
         author    => $self->_author_info,
         package   => $self->_package_info,
         modcooker => {
@@ -449,6 +451,8 @@ sub template_data {
         },
         extra => $self->{extravars},
     };
+
+    my $tdata = dclone($tmp);
 
     return wantarray ? %{$tdata} : $tdata;
 }
