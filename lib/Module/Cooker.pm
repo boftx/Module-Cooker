@@ -151,11 +151,10 @@ sub _lib_path {
 # used to find the location of THIS module. assumes that all support
 # dirs will be under a directory named after this module (without
 # the '.pm')
+# NOTE! this is a class method that doesn't check the 'cached' value.
+# YOU WILL BE SURPRISED if there has been an intervening chdir operation!
+# see the public 'basename_dir' method for normal use.
 sub _basename_dir {
-    my $self = shift;
-
-    return $self->{_basename_dir} if $self->{_basename_dir};
-
     my $package = __PACKAGE__;
 
     $package =~ s/::/\//g;
@@ -220,7 +219,7 @@ sub _author_info {
 sub _profile_dir {
     my $self = shift;
 
-    my $dir = catdir( $self->_basename_dir, $self->{profile} );
+    my $dir = catdir( $self->basename_dir, $self->{profile} );
 
     -d $dir ? return $dir : return;
 }
@@ -262,17 +261,16 @@ sub _process_template {
 
     # this is a seperate stucture to all for a future method to let
     # users specify additional config options similar to how
-    # extravars will work.
+    # extravars work.
     my $tt_config = {
         TRIM         => 0,
         PRE_CHOMP    => 0,
         POST_CHOMP   => 0,
-        INCLUDE_PATH => \@{$self->profile_dirs},
+        INCLUDE_PATH => \@{ $self->profile_dirs },
         OUTPUT_PATH  => $self->dist_name,
     };
     my $t = Template->new($tt_config);
 
-# need to add logic to incorporate extravars into this
     my $vars = $self->template_data;
 
     $t->process( $args{template}, $vars, $outfile ) || die $t->error . "\n";
@@ -284,17 +282,17 @@ sub _gather_profile {
     my $self = shift;
     my %args = @_;
 
-    my $dir = $args{abs_path};
+    my $dir    = $args{abs_path};
     my $subdir = $args{subdir_path};
 
     die "Can't find dir: $dir\n" unless -d $dir;
 
-    opendir( my $dh, $dir ) || die "can't opendir $dir: $!";
+    opendir( my $dh, $dir ) or die "can't opendir $dir: $!";
     my @files = readdir($dh);
     closedir $dh;
 
     my $std_dir = $self->_profile_dir;
-    my $src_type = ($dir =~ /^(?:$std_dir)/) ? 'standard' : 'local';
+    my $src_type = ( $dir =~ /^(?:$std_dir)/ ) ? 'standard' : 'local';
 
     for my $fname (@files) {
         next if $fname =~ m{^\.{1,2}\z};
@@ -376,15 +374,23 @@ sub profile_dirs {
     my $self = shift;
 
     my @searchdirs = $self->localdirs;
-    push(@searchdirs, $self->_basename_dir);
+    push( @searchdirs, $self->basename_dir );
 
     my @profile_dirs;
-    for ( @searchdirs ) {
+    for (@searchdirs) {
         my $profile_dir = catdir( $_, $self->profile );
-        push(@profile_dirs,$profile_dir) if -d $profile_dir;
+        push( @profile_dirs, $profile_dir ) if -d $profile_dir;
     }
 
     return wantarray ? @profile_dirs : \@profile_dirs;
+}
+
+sub basename_dir {
+    my $self = shift;
+
+    croak "Can't set read-only method: basename_dir" if @_;
+
+    return $self->{_basename_dir};
 }
 
 # builds list of final attribute values
@@ -433,6 +439,7 @@ sub template_data {
             version => $VERSION,
             perlver => $],
         },
+        extra => $self->{extravars},
     };
 
     return wantarray ? %{$tdata} : $tdata;
@@ -446,7 +453,7 @@ sub cook {
     $self->{_templates}     = {};
     $self->{_template_dirs} = [];
 
-    for ( @{$self->profile_dirs} ) {
+    for ( @{ $self->profile_dirs } ) {
         my $dir = Cwd::realpath($_);
         $self->_gather_profile( abs_path => $dir, subdir_path => undef );
     }
@@ -605,6 +612,13 @@ what is actually passed on.
 
 The method will return either a hash or hash reference depending upon the
 calling context.
+
+=head2 basename_dir
+
+Read-only method that returns the absolute path to where the module is
+located in the C<@INC> search path with the name of this module
+(C<Cooker>) appended. This is used to located the module's standard
+template directories.
 
 =head2 summary
 
