@@ -13,9 +13,9 @@ require Module::Cooker;
 my $mc = new_ok('Module::Cooker');
 
 # the following should be read-only
-for
-  my $method (qw( basename_dir summary module_name dist_name template_data ))
-{
+for my $method (
+    qw( profile_dirs basename_dir summary module_name dist_name template_data )
+  ) {
     next unless can_ok( 'Module::Cooker', $method );
     ok( defined( $mc->$method() ), "accessor $method exists" );
     try {
