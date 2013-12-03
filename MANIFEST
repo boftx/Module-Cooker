@@ -15,9 +15,11 @@ xt/pod-coverage.t
 xt/pod.t
 bin/modcooker
 lib/Module/Cooker.pm
+lib/Module/Cooker/modcooker.cfg
 lib/Module/Cooker/default/Changes
 lib/Module/Cooker/default/LICENSE
 lib/Module/Cooker/default/Makefile.PL
+lib/Module/Cooker/default/MANIFEST.SKIP
 lib/Module/Cooker/default/Module.pm
 lib/Module/Cooker/default/README
 lib/Module/Cooker/default/t/00-load.t
