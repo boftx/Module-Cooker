@@ -65,14 +65,16 @@ my $cfg = AppConfig->new(
 $cfg->define( 'localdirs=s@' => { EXPAND => EXPAND_UID } );
 
 # read a local config file if it exists
-if ( $mc_dir ) {
+if ($mc_dir) {
     my $cfg_fname = catfile( $mc_dir, 'modcooker.cfg' );
     try {
-        $cfg->file( $cfg_fname );
-    } catch {
+        $cfg->file($cfg_fname);
+    }
+    catch {
         warn "Config file fatal error\n";
         die $_;
-    } if -f $cfg_fname;
+    }
+    if -f $cfg_fname;
 }
 
 # get this now before checking the command line
@@ -80,15 +82,16 @@ my @initial_dirs = @{ $cfg->localdirs };
 
 # it makes no sense to have these defined other than as command line options.
 # they will throw an exception if found in the config file.
-$cfg->define( 'setup' => { ARGCOUNT => ARGCOUNT_NONE } );
+$cfg->define( 'setup'     => { ARGCOUNT => ARGCOUNT_NONE } );
 $cfg->define( 'available' => { ARGCOUNT => ARGCOUNT_NONE } );
-$cfg->define( 'copy' => { ARGCOUNT => ARGCOUNT_NONE } );
+$cfg->define( 'copy'      => { ARGS     => '=s', ARGCOUNT => ARGCOUNT_ONE } );
 
 # add in anything from the command line
 # NOTE: hashref args (i.e. extravars) do NOT work due to a bug in AppConfig
 try {
     $cfg->getopt();
-} catch {
+}
+catch {
     warn "Command line fatal error\n";
     die $_;
 };
@@ -114,44 +117,113 @@ if ( $cfgopts{setup} ) {
 
     # we need to create '~/modcook' if it doesn't exist
     try {
-        $mc_dir = catdir($homedir, 'modcook');
-        make_path( $mc_dir ) or die $!;
-    } catch {
+        $mc_dir = catdir( $homedir, 'modcook' );
+        make_path($mc_dir) or die $!;
+    }
+    catch {
         die "Can't make dir $mc_dir: $_";
-    } unless $mc_dir;
+    }
+    unless $mc_dir;
 
-    my $std_cfg = catfile(Module::Cooker->basename_dir,'modcooker.cfg');
-    copy($std_cfg,$cfg_fname) or die "Can't create $cfg_fname: $!";
+    my $std_cfg = catfile( Module::Cooker->basename_dir, 'modcooker.cfg' );
+    copy( $std_cfg, $cfg_fname ) or die "Can't create $cfg_fname: $!";
 
     print "$cfg_fname has been created, please edit it as needed.\n";
 
     exit;
-}
-elsif ( $cfgopts{available} ) {
+} elsif ( $cfgopts{available} ) {
 
     print "Searching for Available Profiles\n\n";
 
-    my @localdirs = @{$cfgopts{localdirs}};
+    my @localdirs = @{ $cfgopts{localdirs} };
 
     my $profiles = {};
 
     print "Search Order:\n";
-    for ( @localdirs ) {
-        _get_profiles(Cwd::realpath($_),'local',$profiles);
+    for (@localdirs) {
+        my $dir = Cwd::realpath($_);
+        print "  $dir\n";
+        _get_profiles( Cwd::realpath($_), 'local', $profiles );
     }
-    _get_profiles(Module::Cooker->_basename_dir,'standard',$profiles);
+    my $dir = Cwd::realpath( Module::Cooker->_basename_dir );
+    print "  $dir\n";
+    _get_profiles( $dir, 'standard', $profiles );
     print "\n";
 
     my $maxlen = length('Profile');
-    for ( keys(%{$profiles}) ) {
+    for ( keys( %{$profiles} ) ) {
         $maxlen = length($_) if length($_) > $maxlen;
     }
     my $pat1 = "\%-${maxlen}s   - \%s";
     my $pat2 = "  \%-${maxlen}s - \%s";
 
-    printf("$pat1\n",'Profile','Type');
-    for ( keys(%{$profiles}) ) {
-        printf("$pat2\n",$_,$profiles->{$_});
+    printf( "$pat1\n", 'Profile', 'Type' );
+    for ( keys( %{$profiles} ) ) {
+        printf( "$pat2\n", $_, $profiles->{$_} );
+    }
+
+    exit;
+} elsif ( $cfgopts{copy} ) {
+    # does the standard profile exist?
+    my $profiles = {};
+    _get_profiles( Module::Cooker->_basename_dir, 'standard', $profiles );
+    die "No such standard profile: $cfgopts{copy}"
+      unless $profiles->{ $cfgopts{copy} };
+
+    # place the copy in ~/modcook for now, do not overwrite existing files
+    # if present, just add to them.
+
+    # we need to create '~/modcook' if it doesn't exist
+    try {
+        $mc_dir = catdir( $homedir, 'modcook' );
+        make_path($mc_dir) or die $!;
+    }
+    catch {
+        die "Can't make dir $mc_dir: $_";
+    }
+    unless $mc_dir;
+
+    # and create the target profile dir as well, if need be
+    my $dest_dir = catdir( $mc_dir, $cfgopts{copy} );
+    try {
+        make_path($dest_dir) or die $!;
+    }
+    catch {
+        die "Can't make $dest_dir: $_";
+    }
+    unless -d $dest_dir;
+
+    # now we just copy the source tree, let M::C do the hard work of
+    # finding the files themselves
+    my $mc = Module::Cooker->new( profile => $cfgopts{copy} );
+
+    # there should be only a single profile dir since localdirs was empty
+    my $src_dir = Cwd::realpath( pop( @{ $mc->profile_dirs } ) );
+    $mc->_gather_profile( abs_path => $src_dir, subdir_path => undef );
+
+    # create any missing dirs so File::Copy won't complain
+    for ( @{ $mc->{_template_dirs} } ) {
+        my $dest_subdir = catdir( $dest_dir, $_ );
+        try {
+            warn "creating subdir: $dest_subdir\n";
+            make_path($dest_subdir) or die $!;
+        }
+        catch {
+            die "Can not create $dest_subdir: $_";
+        }
+        unless -d $dest_subdir;
+    }
+
+    for my $template ( keys( %{ $mc->{_templates} } ) ) {
+        my $src_path  = catfile( $src_dir,  $template );
+        my $dest_path = catfile( $dest_dir, $template );
+
+        if ( -e $dest_path ) {
+            warn "Skipping template in $dest_dir: $template\n";
+            next;
+        }
+        warn "Copying $template to $dest_path\n";
+        copy( $src_path, $dest_path ) or die "Can't copy $template: $!";
     }
 
     exit;
@@ -184,16 +256,14 @@ exit;
 sub _cfg_error {
     if ( @_ > 1 ) {
         my $pattern = shift;
-        die sprintf("$pattern\n",@_);
+        die sprintf( "$pattern\n", @_ );
     } else {
         die "$_[0]\n";
     }
 }
 
 sub _get_profiles {
-    my ($dir,$type,$found) = @_;
-    
-    print "  $dir\n";
+    my ( $dir, $type, $found ) = @_;
 
     opendir( my $dh, $dir ) or die "can't opendir $dir: $!";
     my @files = readdir($dh);
@@ -203,10 +273,9 @@ sub _get_profiles {
         next if $fname =~ m{^\.{1,2}\z};
 
         my $fpath = File::Spec->catfile( $dir, $fname );
+        next unless -d $fpath;
 
-        next unless -d  $fpath;
-
-        $found->{$fname} = $found->{$fname} ? 'overridden': $type;
+        $found->{$fname} = $found->{$fname} ? 'overridden' : $type;
     }
 
     return;
