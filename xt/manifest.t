@@ -1,5 +1,5 @@
 #!perl -T
-#use 5.008_008;
+
 use strict;
 use warnings FATAL => 'all';
 use Test::More;
@@ -9,3 +9,8 @@ eval "use Test::CheckManifest $min_tcm";
 plan skip_all => "Test::CheckManifest $min_tcm required" if $@;
 
 ok_manifest();
+
+done_testing();
+
+exit;
+

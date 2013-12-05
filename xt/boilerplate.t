@@ -1,5 +1,5 @@
 #!perl -T
-#use 5.008_008;
+
 use strict;
 use warnings FATAL => 'all';
 use Test::More;
@@ -51,4 +51,6 @@ TODO: {
     module_boilerplate_ok('lib/Module/Cooker.pm');
 
 }
+
+exit;
 

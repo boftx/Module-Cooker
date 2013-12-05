@@ -1,5 +1,5 @@
 #!perl -T
-#use 5.008_008;
+
 use strict;
 use warnings FATAL => 'all';
 use Test::More;
@@ -10,3 +10,7 @@ eval "use Test::Pod $min_tp";
 plan skip_all => "Test::Pod $min_tp required for testing POD" if $@;
 
 all_pod_files_ok();
+
+done_testing();
+
+exit;
