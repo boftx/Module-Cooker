@@ -561,6 +561,7 @@ This option creates a hash ref that is eventually passed as part of the
 data structure that L<Template> will use as substitution variables.
 Any element in the hash ref can be accessed as C<extra.element_name> in
 a template file.
+
 =item localdirs
 
 The directory (or directories if specified multiple times) to search in
