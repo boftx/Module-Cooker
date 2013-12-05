@@ -38,5 +38,4 @@ WriteMakefile(
         'version'               => '0.77',
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
-    clean => { FILES    => 'Module-Cooker-*' },
 );
