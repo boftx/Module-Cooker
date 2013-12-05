@@ -671,6 +671,8 @@ Please report any bugs or feature requests to C<bug-module-cooker at rt.cpan.org
 the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Module-Cooker>.  I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
 
+You can also submit an issue via the GitHub repository listed below.
+
 =head1 SUPPORT
 
 You can find documentation for this module with the perldoc command.
@@ -681,6 +683,10 @@ You can find documentation for this module with the perldoc command.
 You can also look for information at:
 
 =over 4
+
+=item * GitHub:
+
+L<https://github.com/boftx/Module-Cooker>
 
 =item * RT: CPAN's request tracker (report bugs here)
 
