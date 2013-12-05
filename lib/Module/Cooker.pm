@@ -503,6 +503,11 @@ Version 0.01
  $mc->cook();
   
 
+=head1 DESCRIPTION
+
+You are probably more interested in the command line interface to this module:
+L<modcooker|modcooker>
+
 =head1 CONSTRUCTOR
 
 =head2 new
