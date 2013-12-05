@@ -5,12 +5,12 @@ use ExtUtils::MakeMaker 6.59;
 
 WriteMakefile(
     NAME               => 'Module::Cooker',
-    AUTHOR             => q{Jim Bacon <jim@nortx.com>},
+    AUTHOR             => 'Jim Bacon <jim@nortx.com>',
     VERSION_FROM       => 'lib/Module/Cooker.pm',
     ABSTRACT_FROM      => 'lib/Module/Cooker.pm',
     LICENSE            => 'Perl',
     PL_FILES           => {},
-    MIN_PERL_VERSION   => '5.008.008',
+    EXE_FILES           => [ 'bin/modcooker' ],
     CONFIGURE_REQUIRES => {
         'ExtUtils::MakeMaker' => 6.59,
     },
