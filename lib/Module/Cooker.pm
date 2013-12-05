@@ -1,6 +1,6 @@
 package Module::Cooker;
 
-our $VERSION = 'v0.1_2';
+our $VERSION = 'v0.1.3';
 
 #use 5.008_008;
 
@@ -492,7 +492,7 @@ Module::Cooker - Module starter kit based on Template
 
 =head1 VERSION
 
-Version 0.01
+Version 0.01.3
 
 =head1 SYNOPSIS
 
