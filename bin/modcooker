@@ -5,10 +5,11 @@ use warnings FATAL => 'all';
 
 use lib qw( ../lib );
 
+use Cwd ();
+use Getopt::Long;
 use Try::Tiny;
 use Data::Dumper;
 
-use Getopt::Long;
 use AppConfig (qw( :expand :argcount ));
 
 use File::Spec::Functions (qw( catdir catfile ));
@@ -23,15 +24,15 @@ my $VERSION = '0.1_1';
 my $homedir;
 my $mc_dir = try {
     return unless $homedir = File::HomeDir->my_home;
+
     my $path = catfile( $homedir, 'modcook' );
-    -d $path ? return $path : return;
+    return -d $path ? $path : undef;
 }
 catch {
-    warn "Can not get user's home directory: $_\n";
+    warn "NOTICE: Can not get user's home directory: $_\n";
     return;
 };
-
-#my $extravars = {};
+warn "NOTICE: ~/modcook directory does not exist\n" unless $mc_dir;
 
 # anything not in this hash is meant to be a modcooker param as opposed
 # to being a param passed to the M::C constructor.
@@ -77,8 +78,11 @@ if ( $mc_dir ) {
 # get this now before checking the command line
 my @initial_dirs = @{ $cfg->localdirs };
 
-# it makes no sense to have this defined other than as a command line option
+# it makes no sense to have these defined other than as command line options.
+# they will throw an exception if found in the config file.
 $cfg->define( 'setup' => { ARGCOUNT => ARGCOUNT_NONE } );
+$cfg->define( 'available' => { ARGCOUNT => ARGCOUNT_NONE } );
+$cfg->define( 'copy' => { ARGCOUNT => ARGCOUNT_NONE } );
 
 # add in anything from the command line
 # NOTE: hashref args (i.e. extravars) do NOT work due to a bug in AppConfig
@@ -90,6 +94,14 @@ try {
 };
 
 my %cfgopts = $cfg->varlist("^.+");
+
+# this addresses a major drawback with other config files namely, they
+# don't usually provide a way to override an array
+if ( grep( /^replace$/, @{ $cfgopts{localdirs} } ) ) {
+    shift( @{ $cfgopts{localdirs} } ) for ( 1 .. @initial_dirs );
+    my @tmp = grep !/^replace$/, @{ $cfgopts{localdirs} };
+    $cfgopts{localdirs} = \@tmp;
+}
 
 # if 'setup' is true then all we want to do is copy the sample config file
 # to '~/modcook' and then exit. Should we also copy the default profile to
@@ -111,16 +123,38 @@ if ( $cfgopts{setup} ) {
     my $std_cfg = catfile(Module::Cooker->basename_dir,'modcooker.cfg');
     copy($std_cfg,$cfg_fname) or die "Can't create $cfg_fname: $!";
 
-    print "$cfg_fname created\n";
+    print "$cfg_fname has been created, please edit it as needed.\n";
 
     exit;
 }
+elsif ( $cfgopts{available} ) {
 
-# this addresses a major drawback with other config files
-if ( grep( /^replace$/, @{ $cfgopts{localdirs} } ) ) {
-    shift( @{ $cfgopts{localdirs} } ) for ( 1 .. @initial_dirs );
-    my @tmp = grep !/^replace$/, @{ $cfgopts{localdirs} };
-    $cfgopts{localdirs} = \@tmp;
+    print "Searching for Available Profiles\n\n";
+
+    my @localdirs = @{$cfgopts{localdirs}};
+
+    my $profiles = {};
+
+    print "Search Order:\n";
+    for ( @localdirs ) {
+        _get_profiles(Cwd::realpath($_),'local',$profiles);
+    }
+    _get_profiles(Module::Cooker->_basename_dir,'standard',$profiles);
+    print "\n";
+
+    my $maxlen = length('Profile');
+    for ( keys(%{$profiles}) ) {
+        $maxlen = length($_) if length($_) > $maxlen;
+    }
+    my $pat1 = "\%-${maxlen}s   - \%s";
+    my $pat2 = "  \%-${maxlen}s - \%s";
+
+    printf("$pat1\n",'Profile','Type');
+    for ( keys(%{$profiles}) ) {
+        printf("$pat2\n",$_,$profiles->{$_});
+    }
+
+    exit;
 }
 
 print "Before:\n";
@@ -141,7 +175,7 @@ my $mc = Module::Cooker->new(%mc_params);
 
 print "\nObject values:\n";
 print Dumper( \%{ $mc->summary } );
-exit;
+#exit;
 
 $mc->cook();
 
@@ -156,6 +190,28 @@ sub _cfg_error {
     }
 }
 
+sub _get_profiles {
+    my ($dir,$type,$found) = @_;
+    
+    print "  $dir\n";
+
+    opendir( my $dh, $dir ) or die "can't opendir $dir: $!";
+    my @files = readdir($dh);
+    closedir $dh;
+
+    for my $fname (@files) {
+        next if $fname =~ m{^\.{1,2}\z};
+
+        my $fpath = File::Spec->catfile( $dir, $fname );
+
+        next unless -d  $fpath;
+
+        $found->{$fname} = $found->{$fname} ? 'overridden': $type;
+    }
+
+    return;
+}
+
 __END__
 
 =head1 NAME
@@ -163,6 +219,18 @@ __END__
 modcooker - Create skeleton module packages from templates
 
 =head1 SYNOPSIS
+
+  
+ $ modcooker --package My::New::Module
+  
+
+=head1 USAGE
+
+=head2 OPTIONS
+
+=head1 CONFIGURATION FILE
+
+=head1 LOCAL PROFILES
 
 =head1 KNOWN BUGS
 
