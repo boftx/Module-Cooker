@@ -1,7 +1,5 @@
 #!perl
 
-#use 5.006_001;
-
 use strict;
 use warnings FATAL => 'all';
 
