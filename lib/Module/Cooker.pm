@@ -1,6 +1,6 @@
 package Module::Cooker;
 
-our $VERSION = 'v0.1.3';
+our $VERSION = 'v0.1.4';
 
 #use 5.008_008;
 
@@ -492,7 +492,7 @@ Module::Cooker - Module starter kit based on Template
 
 =head1 VERSION
 
-Version 0.01.3
+Version 0.1.4
 
 =head1 SYNOPSIS
 
@@ -752,7 +752,7 @@ L<http://search.cpan.org/dist/Module-Cooker/>
 =head1 ACKNOWLEDGEMENTS
 
 This module draws heavily upon ideas found in L<Distribution::Cooker>,
-L<Module::Maker> and L<Module::Starter>.
+L<ExtUtils::ModuleMaker> and L<Module::Starter>.
 
 Special thanks goes to Perl Monk
 L<tobyink|http://www.perlmonks.org/?node_id=757127> for the module name
