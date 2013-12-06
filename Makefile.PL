@@ -26,7 +26,7 @@ WriteMakefile(
         'File::Copy'            => 0,
         'File::HomeDir'         => 0,
         'File::Path'            => 0,
-        'File::Spec::Functions' => 0,
+        'File::Spec'            => 0,
         'File::Temp'            => 0,
         'File::Which'           => 0,
         'Getopt::Long'          => 0,
