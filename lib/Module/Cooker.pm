@@ -292,7 +292,7 @@ sub _gather_profile {
     closedir $dh;
 
     my $std_dir = $self->_profile_dir;
-    my $src_type = ( $dir =~ /^(?:$std_dir)/ ) ? 'standard' : 'local';
+    my $src_type = ( $dir =~ /^(?:\Q$std_dir\E)/ ) ? 'standard' : 'local';
 
     for my $fname (@files) {
         next if $fname =~ m{^\.{1,2}\z};
