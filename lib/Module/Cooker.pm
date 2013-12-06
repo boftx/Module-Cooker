@@ -492,7 +492,7 @@ Module::Cooker - Module starter kit based on Template
 
 =head1 VERSION
 
-Version 0.1.4
+Version v0.1.4
 
 =head1 SYNOPSIS
 
