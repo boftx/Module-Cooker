@@ -8,15 +8,16 @@ WriteMakefile(
     AUTHOR             => 'Jim Bacon <jim@nortx.com>',
     VERSION_FROM       => 'lib/Module/Cooker.pm',
     ABSTRACT_FROM      => 'lib/Module/Cooker.pm',
-    LICENSE            => 'Perl',
+    LICENSE            => 'perl',
     PL_FILES           => {},
-    EXE_FILES           => [ 'bin/modcooker' ],
+    EXE_FILES          => [ 'bin/modcooker' ],
     CONFIGURE_REQUIRES => {
         'ExtUtils::MakeMaker' => 6.59,
     },
     BUILD_REQUIRES => {
         'Test::More' => 0,
     },
+    # yes, almost all of these are CORE, but that list DOES change!
     PREREQ_PM => {
         'AppConfig'             => 0,
         'Carp'                  => 0,
