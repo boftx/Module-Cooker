@@ -26,6 +26,14 @@ use POSIX qw( strftime );
 
 use Template;
 
+# possible generic untaint pattern found here:
+# http://www.nntp.perl.org/group/perl.perl5.porters/2002/04/msg57041.html
+
+# my ($cwd_untaint) = $cwd =~ /^([^<>|;*]+)$/;
+
+# a handy way to untaint in place
+# $dir =~ /^(.*)$/ && ($dir = $1);
+
 my $profile_name_rx = qr/[A-Z_a-z][A-Z_a-z0-9.-]*/;
 
 # the following regex is ripped from Module::Runtime
