@@ -377,7 +377,7 @@ sub profile_dirs {
     croak "Can't set read-only method: profile_dirs" if @_;
 
     my @searchdirs = $self->localdirs;
-    push( @searchdirs, $self->basename_dir );
+    push( @searchdirs, catdir($self->basename_dir, 'profiles' ) );
 
     my @profile_dirs;
     for (@searchdirs) {
