@@ -220,7 +220,7 @@ sub _author_info {
 sub _profile_dir {
     my $self = shift;
 
-    my $dir = catdir( $self->basename_dir, $self->{profile} );
+    my $dir = catdir( $self->basename_dir, 'profiles', $self->{profile} );
 
     -d $dir ? return $dir : return;
 }
