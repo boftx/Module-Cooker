@@ -1,6 +1,6 @@
 package Module::Cooker;
 
-our $VERSION = 'v0.1.4';
+our $VERSION = 'v0.1_5';
 
 #use 5.008_008;
 
@@ -368,7 +368,7 @@ sub profile_dirs {
     croak "Can't set read-only method: profile_dirs" if @_;
 
     my @searchdirs = $self->localdirs;
-    push( @searchdirs, catdir($self->std_profiles_dir ) );
+    push( @searchdirs, catdir( $self->std_profiles_dir ) );
 
     my @profile_dirs;
     for (@searchdirs) {

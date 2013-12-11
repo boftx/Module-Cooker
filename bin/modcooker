@@ -19,7 +19,7 @@ use Pod::Usage;
 
 use Module::Cooker;
 
-my $VERSION = '0.1.4';
+my $VERSION = '0.1_4';
 
 my $homedir;
 my $mc_dir = try {
@@ -161,7 +161,7 @@ if ( $cfgopts{setup} ) {
     }
 #    my $dir = Cwd::realpath( Module::Cooker->_basename_dir );
     # get a default object simple so we have the "dir" methods
-    my $mc = Module::Cooker->new();
+    my $mc  = Module::Cooker->new();
     my $dir = $mc->std_profiles_dir;
     print "  $dir\n";
     _get_profiles( $dir, 'standard', $profiles );
