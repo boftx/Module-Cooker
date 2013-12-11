@@ -19,14 +19,14 @@ WriteMakefile(
     },
     # yes, almost all of these are CORE, but that list DOES change!
     PREREQ_PM => {
-        'AppConfig'             => 0,
+        'AppConfig'             => '1.66',
         'Carp'                  => 0,
         'Cwd'                   => 0,
         'Data::Dumper'          => 0,
         'ExtUtils::Manifest'    => 0,
         'File::Copy'            => 0,
         'File::HomeDir'         => 0,
-        'File::Path'            => 0,
+        'File::Path'            => '2.07',
         'File::Spec'            => 0,
         'File::Temp'            => 0,
         'File::Which'           => 0,
