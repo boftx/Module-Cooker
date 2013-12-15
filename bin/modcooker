@@ -85,7 +85,8 @@ $cfg->define( 'available' => { ARGCOUNT => ARGCOUNT_NONE } );
 $cfg->define( 'copy'      => { ARGS     => '=s', ARGCOUNT => ARGCOUNT_ONE } );
 
 # add in anything from the command line
-# NOTE: hashref args (i.e. extravars) do NOT work due to a bug in AppConfig
+# NOTE: using hashref args (i.e. extravars) on the command line does NOT work
+# due to a bug in AppConfig
 try {
     $cfg->getopt();
 }
@@ -101,9 +102,13 @@ my @exclusives;
 for (qw( available copy setup )) {
     push( @exclusives, "--$_" ) if $cfgopts{$_};
 }
+
 if ( @exclusives > 1 ) {
     my $exclusives_str = join( ', ', @exclusives );
     warn "Mutually exclusive options found: $exclusives_str\n\n";
+    pod2usage(2);
+} elsif ( @exclusives && @ARGV ) {
+    # no package name is needed for the "exclusive" options
     pod2usage(2);
 }
 
@@ -115,16 +120,17 @@ if ( grep( /^replace$/, @{ $cfgopts{localdirs} } ) ) {
     $cfgopts{localdirs} = \@tmp;
 }
 
-# if 'setup' is true then all we want to do is copy the sample config file
-# to '~/modcook' and then exit. Should we also copy the default profile to
-# '~/modcook/custom' as a starting point?
+# if 'setup' is true then we want to do is copy the sample config file
+# to '~/modcook', create the 'profiles' and 'include' directories, and
+# then exit. Should we also copy the default profile to
+# '~/modcook/profiles/custom' as a starting point?
 if ( $cfgopts{setup} ) {
     pod2usage if @ARGV;
 
     die "Must have a user's homedir to do a setup" unless $homedir;
 
     my $cfg_fname = catfile( $homedir, 'modcook', 'modcooker.cfg' );
-    die "$cfg_fname already exists" if -f $cfg_fname;
+    warn "$cfg_fname already exists\n" and exit if -f $cfg_fname;
 
     # we need to create '~/modcook' if it doesn't exist
     try {
@@ -132,12 +138,11 @@ if ( $cfgopts{setup} ) {
         make_path($mc_dir) or die $!;
     }
     catch {
-        die "Can't make dir $mc_dir: $_";
+        die "Can't create $mc_dir: $_";
     }
     unless $mc_dir;
 
     my $mc = Module::Cooker->new();
-#    my $std_cfg = catfile( Module::Cooker->_basename_dir, 'modcooker.cfg' );
     my $std_cfg = catfile( $mc->basename_dir, 'modcooker.cfg' );
     copy( $std_cfg, $cfg_fname ) or die "Can't create $cfg_fname: $!";
 
@@ -159,8 +164,8 @@ if ( $cfgopts{setup} ) {
         print "  $dir\n";
         _get_profiles( Cwd::realpath($_), 'local', $profiles );
     }
-#    my $dir = Cwd::realpath( Module::Cooker->_basename_dir );
-    # get a default object simple so we have the "dir" methods
+
+    # get a default object so we have the various "_dir" methods
     my $mc  = Module::Cooker->new();
     my $dir = $mc->std_profiles_dir;
     print "  $dir\n";
@@ -185,7 +190,6 @@ if ( $cfgopts{setup} ) {
 
     # does the standard profile exist?
     my $profiles = {};
-#    _get_profiles( Module::Cooker->_basename_dir, 'standard', $profiles );
     my $mc = Module::Cooker->new( profile => $cfgopts{copy} );
     _get_profiles( $mc->std_profiles_dir, 'standard', $profiles );
     die "No such standard profile: $cfgopts{copy}"
@@ -215,8 +219,11 @@ if ( $cfgopts{setup} ) {
     unless -d $dest_dir;
 
     # now we just copy the source tree, let M::C do the hard work of
-    # finding the files themselves
-#    my $mc = Module::Cooker->new( profile => $cfgopts{copy} );
+    # finding the files themselves.
+
+    # NOTE!!! We are poking around "under-the-hood" by using private
+    # methods and attributes here. It might be wise to make those public
+    # in a future release.
 
     # there should be only a single profile dir since localdirs was empty
     my $src_dir = Cwd::realpath( pop( @{ $mc->profile_dirs } ) );
